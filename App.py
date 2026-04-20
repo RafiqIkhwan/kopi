@@ -24,17 +24,15 @@ st.set_page_config(
 @st.cache_resource
 def load_trained_model():
     try:
-        # Download model jika belum ada
         if not os.path.exists(MODEL_PATH):
             with st.spinner("📥 Mengunduh model dari Google Drive..."):
                 url = f"https://drive.google.com/uc?id={FILE_ID}"
-                gdown.download(url, MODEL_PATH, quiet=False)
+                gdown.download(url, MODEL_PATH, quiet=False, fuzzy=True)
 
         model = tf.keras.models.load_model(MODEL_PATH)
         return model
-
     except Exception as e:
-        st.error("❌ Gagal memuat model dari Google Drive")
+        st.error("❌ Gagal memuat model.")
         st.error(e)
         return None
 
@@ -43,24 +41,21 @@ def preprocess_image(image):
     image = ImageOps.fit(image, IMG_SIZE, Image.Resampling.LANCZOS)
     img_array = np.asarray(image)
 
-    # pastikan RGB
     if img_array.shape[-1] == 4:
         img_array = img_array[..., :3]
 
     img_array = tf.keras.applications.resnet50.preprocess_input(img_array)
     img_array = np.expand_dims(img_array, axis=0)
-
     return img_array
 
 # --- UI ---
 st.title("☕ Klasifikasi Citra Kopi")
-st.markdown("Upload gambar biji/daun kopi untuk diprediksi menggunakan model **ResNet50 + TPE Optimization**.")
+st.markdown("Analisis penyakit daun kopi menggunakan model **ResNet50**.")
 
 model = load_trained_model()
 
 if model is not None:
-    input_method = st.radio("Pilih metode input gambar:", ("Upload File", "Ambil Foto dari Kamera"))
-
+    input_method = st.radio("Pilih metode input:", ("Upload File", "Ambil Foto dari Kamera"))
     image = None
 
     if input_method == "Upload File":
@@ -69,25 +64,22 @@ if model is not None:
             image = Image.open(uploaded_file)
 
     elif input_method == "Ambil Foto dari Kamera":
-        camera_image = st.camera_input("Ambil foto menggunakan kamera")
+        camera_image = st.camera_input("Ambil foto")
         if camera_image is not None:
             image = Image.open(camera_image)
 
     if image is not None:
         image = ImageOps.exif_transpose(image)
-
         col1, col2 = st.columns([1, 1])
 
         with col1:
-            st.image(image, caption='Gambar yang dipilih', use_container_width=True)
+            st.image(image, caption='Gambar Input', use_container_width=True)
 
         with col2:
-            st.write("Menganalisis...")
-
-            # Progress bar
+            st.write("🔍 **Menganalisis...**")
             my_bar = st.progress(0)
             for percent_complete in range(100):
-                time.sleep(0.01)
+                time.sleep(0.005)
                 my_bar.progress(percent_complete + 1)
 
             # Prediksi
@@ -97,27 +89,25 @@ if model is not None:
             predicted_class_label = CLASS_NAMES[predicted_class_idx]
             confidence = prediction_prob[0][predicted_class_idx] * 100
 
-            st.success("Selesai!")
+            st.success("Analisis Selesai!")
             st.metric(
-                label="Hasil Prediksi",
-                value=predicted_class_label,
-                delta=f"{confidence:.2f}% Akurat"
+                label="Hasil Klasifikasi", 
+                value=predicted_class_label, 
+                delta=f"{confidence:.2f}% Confidence"
             )
 
         st.divider()
 
-        # Visualisasi
-        st.subheader("📊 Tingkat Keyakinan Model")
-
+        # Detail Probabilitas (Hanya dalam Expander, tanpa Bar Chart)
         prob_df = pd.DataFrame({
             'Kelas': CLASS_NAMES,
             'Probabilitas': prediction_prob[0]
         })
 
-        st.bar_chart(prob_df.set_index('Kelas'))
-
-        with st.expander("Lihat detail probabilitas"):
-            st.dataframe(prob_df.style.format({'Probabilitas': '{:.4%}'}))
-
+        with st.expander("📊 Lihat detail skor probabilitas"):
+            st.dataframe(
+                prob_df.style.format({'Probabilitas': '{:.4%}'}),
+                use_container_width=True
+            )
 else:
-    st.warning("Model tidak dapat dimuat.")
+    st.warning("Pastikan model tersedia untuk melanjutkan.")
