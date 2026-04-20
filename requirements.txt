@@ -11,4 +11,3 @@ numpy
 pillow 
 tqdm
 gdown
-os
