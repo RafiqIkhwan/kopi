@@ -10,3 +10,5 @@ torchaudio
 numpy 
 pillow 
 tqdm
+gdown
+os
