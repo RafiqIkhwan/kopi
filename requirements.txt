@@ -1,0 +1,12 @@
+streamlit
+tensorflow
+numpy
+opencv-python
+Pillow
+matplotlib
+torch 
+torchvision 
+torchaudio 
+numpy 
+pillow 
+tqdm
