@@ -9,7 +9,7 @@ import os
 
 # --- KONFIGURASI ---
 MODEL_PATH = "model.keras"
-FILE_ID = "ISI_ID_GOOGLE_DRIVE_KAMU"  # ⬅️ GANTI INI
+FILE_ID = "1zV1rbvywa1PO8R783G8n2tSsmbTQ945l"  # ⬅️ GANTI INI
 IMG_SIZE = (224, 224)
 
 CLASS_NAMES = ['Leaf rust', 'Leaf spot', 'Sehat'] 
